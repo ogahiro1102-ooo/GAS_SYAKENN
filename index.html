@@ -1,0 +1,62 @@
+const SHEET_NAME = "data";
+
+/* ========= 申請側（POST） ========= */
+function doPost(e) {
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAME);
+
+  const data = JSON.parse(e.postData.contents);
+
+  sheet.appendRow([
+    data.timestamp || new Date().toISOString(),
+    data.date || "",
+    data.hour || "",
+    data.vendor || "",
+    data.place || "",
+    data.ship || "",
+    data.block || "",
+    data.area || "",
+    data.note || ""
+  ]);
+
+  return ContentService
+    .createTextOutput(
+      JSON.stringify({ status: "ok" })
+    )
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ========= 管理側（GET） ========= */
+function doGet(e) {
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAME);
+
+  const values = sheet.getDataRange().getValues();
+  values.shift(); // ヘッダ削除
+
+  const from = e.parameter.from;
+  const to = e.parameter.to;
+
+  const result = values
+    .map(r => ({
+      timestamp: r[0],
+      date: r[1],
+      hour: r[2],
+      vendor: r[3],
+      place: r[4],
+      ship: r[5],
+      block: r[6],
+      area: r[7],
+      note: r[8]
+    }))
+    .filter(r => {
+      if (!from || !to) return true;
+      return r.date >= from && r.date <= to;
+    });
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
