@@ -6,7 +6,25 @@ function doPost(e) {
     .getActiveSpreadsheet()
     .getSheetByName(SHEET_NAME);
 
-  const data = JSON.parse(e.postData.contents);
+  let data = {};
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch (err) {
+    sheet.appendRow([
+      new Date().toISOString(),
+      "JSON_ERROR",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      err.toString()
+    ]);
+    return ContentService
+      .createTextOutput("NG")
+      .setMimeType(ContentService.MimeType.TEXT);
+  }
 
   sheet.appendRow([
     data.timestamp || new Date().toISOString(),
@@ -21,10 +39,8 @@ function doPost(e) {
   ]);
 
   return ContentService
-    .createTextOutput(
-      JSON.stringify({ status: "ok" })
-    )
-    .setMimeType(ContentService.MimeType.JSON);
+    .createTextOutput("OK")
+    .setMimeType(ContentService.MimeType.TEXT);
 }
 
 /* ========= 管理側（GET） ========= */
